@@ -37,9 +37,9 @@ const templateValues = {
     htmlTail: '</html>',
 };
 
-let clickDownLoadFileType = 0;
 const HTML_TYPE = 0;
 const PDF_TYPE = 1;
+let clickDownLoadFileType = HTML_TYPE;
 
 function App() {
     // head 标签值
@@ -61,7 +61,8 @@ function App() {
     const [htmlCode, setHtmlCode] = useState(<h1>网页预览</h1>);
     // 模态框显示情况
     const [modalVisible, setModalVisible] = useState(false);
-    const [fileName, setFileName] = useState('test.html');
+    // 生成的文件名
+    const [fileName, setFileName] = useState('test');
 
     return (
         <div style={styles.container}>
