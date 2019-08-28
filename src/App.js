@@ -1,26 +1,169 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, {useState} from 'react';
 import './App.css';
+import {Affix, BackTop, Button, Col, Collapse, Icon, Input, Row, Typography} from "antd";
+import html2pdf from "html2pdf.js";
+
+const { TextArea } = Input;
+const { Title } = Typography;
+const { Panel } = Collapse;
+
+const styles = {
+  container: {
+    margin: 15,
+  },
+  htmlStyle: {
+    backgroundColor: 'white',
+  },
+  cssStyle: {
+    backgroundColor: 'white',
+  },
+  head: {
+    margin: '5px 0 20px 0',
+  },
+  btnRow: {
+  },
+  btn: {
+    margin: '5px 20px 5px 0'
+  }
+};
+
+const templateValues = {
+  htmlMark: '<!DOCTYPE html>',
+  htmlHead: '<html lang="zh">',
+  headHead: '    <head>',
+  headTail: '    </head>',
+  bodyHead: '    <body>',
+  bodyTail: '    </body>',
+  htmlTail: '</html>',
+};
 
 function App() {
+  // head 标签值
+  const [headValues, setHeadValues] = useState('        <meta charset=utf-8>');
+  // 控制显示输入框还是显示生成的网页预览，true 显示输入框，false 显示网页预览
+  const [showInputOrPage, setShowInputOrPage] = useState(true);
+  // body 标签值
+  const [bodyTemplateValues, setBodyTemplateValues] = useState('        <!-- 在这里输入想加在 body 中的 HTML 代码 -->');
+  // 输入的 HTML 代码
+  const [htmlValues, setHtmlValues] = useState('');
+  // 输入的 CSS 代码
+  const [cssValues, setCssValues] = useState('');
+  // 网页是否在生成中
+  const [htmlGeneratedText, setHtmlGeneratedText] = useState('生成并预览网页');
+  const [downloadBtn, setDownloadBtn] = useState(true);
+  const [htmlCode, setHtmlCode] = useState(<h1>网页预览</h1>);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={styles.container}>
+      <BackTop>
+        <Button shape={'round'} type={"primary"} size={"large"}>
+          <Icon type="vertical-align-top" />
+          回到顶部
+        </Button>
+      </BackTop>
+      <Affix offsetTop={15} style={styles.head}>
+        <Row key={'btnRow2'} style={styles.btnRow}>
+          <Col xs={24} sm={24} md={24} lg={24} xl={24}>
+            <Collapse>
+              <Panel header={
+                <Typography>
+                  <Title level={4}>
+                    点击展开自定义网页生成模板</Title>
+                </Typography>
+              } key="1">
+                <Input value={templateValues.htmlMark} disabled={true}/>
+                <Input value={templateValues.htmlHead} disabled={true}/>
+                <Input value={templateValues.headHead} disabled={true}/>
+                <TextArea value={headValues} rows={5} onChange={event => setHeadValues(event.target.value)}/>
+                <Input value={templateValues.headTail} disabled={true}/>
+                <Input value={templateValues.bodyHead} disabled={true}/>
+                <TextArea value={bodyTemplateValues} rows={5} onChange={event => {
+                  setBodyTemplateValues(event.target.value);
+                }}/>
+                <Input value={templateValues.bodyTail} disabled={true}/>
+                <Input value={templateValues.htmlTail} disabled={true}/>
+              </Panel>
+            </Collapse>
+          </Col>
+        </Row>
+        <Row key={'btnRow1'} style={styles.btnRow}>
+          <Col xs={24} sm={24} md={24} lg={24} xl={24}>
+            <Button style={styles.btn} type={"primary"} onClick={() => {
+              setDownloadBtn(false);
+              setShowInputOrPage(!showInputOrPage);
+              if (htmlGeneratedText === '生成并预览网页') {
+                let tmpCode = templateValues.htmlMark + templateValues.htmlHead + templateValues.headHead + headValues + '<style>' + cssValues + '</style>'
+                    + templateValues.headTail + templateValues.bodyHead + bodyTemplateValues
+                    + htmlValues + templateValues.bodyTail + templateValues.htmlTail;
+                setHtmlCode(tmpCode);
+                console.log(tmpCode);
+                setHtmlGeneratedText('返回编辑');
+              } else {
+                setHtmlGeneratedText('生成并预览网页');
+                setDownloadBtn(true);
+              }
+            }}>
+              {htmlGeneratedText}
+            </Button>
+            <Button style={styles.btn} type={"primary"} disabled={downloadBtn} onClick={() => {
+              createAndDownloadFile('test.html', htmlCode);
+            }}>
+              下载生成的 HTML 文件到本地
+            </Button>
+            <Button style={styles.btn} type={"primary"} disabled={downloadBtn} onClick={() => {
+              let worker = html2pdf();
+              worker.from(htmlCode).save('test.pdf');
+            }}>
+              生成PDF(使用的js库转换成PDF后可能出现显示不完整)
+            </Button>
+          </Col>
+        </Row>
+      </Affix>
+      <Row style={{
+        display: showInputOrPage ? 'block' : 'none',
+      }} key={'input'} gutter={16}>
+        <Col style={styles.htmlStyle} xs={12} sm={12} md={12} lg={12} xl={12}>
+          <TextArea autosize={{
+            minRows: 30,
+          }} placeholder={' 在此输入 HTML 代码'} onChange={event => {
+            let valueTmp = event.target.value;
+            console.log(valueTmp);
+            setHtmlValues(valueTmp);
+            if (valueTmp === '') {
+              setDownloadBtn(true);
+            }
+          }}/>
+        </Col>
+        <Col style={styles.cssStyle} xs={12} sm={12} md={12} lg={12} xl={12}>
+          <TextArea autosize={{
+            minRows: 30,
+          }} placeholder={' 在此输入 CSS 代码'} onChange={event => {
+            let valueTmp = event.target.value;
+            console.log(valueTmp);
+            setCssValues(valueTmp);
+            if (valueTmp === '') {
+              setDownloadBtn(true);
+            }
+          }}/>
+        </Col>
+      </Row>
+      <iframe frameBorder={0} srcDoc={htmlCode} style={{
+        display: !showInputOrPage ? 'block' : 'none',
+        width: '100%',
+        height: '100%',
+        minHeight: 800,
+        overflowY: 'hidden',
+      }}>
+      </iframe>
     </div>
   );
 }
-
+function createAndDownloadFile(fileName, content) {
+  var aTag = document.createElement('a');
+  var blob = new Blob([content]);
+  aTag.download = fileName;
+  aTag.href = URL.createObjectURL(blob);
+  aTag.click();
+  URL.revokeObjectURL(blob);
+}
 export default App;
