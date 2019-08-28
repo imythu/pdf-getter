@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+.idea
+pdf-getter.iml
 /.pnp
 .pnp.js
 
